@@ -3,9 +3,9 @@
 # This script installs the tools on top of a normal Ubuntu box.
 #
 # This script should be run via curl:
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/jdubois/jdubois-configuration/master/install.sh)"
+#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/wayne-optin/personal/master/ubuntu_install.sh)"
 # or wget:
-#   sh -c "$(wget -qO- https://raw.githubusercontent.com/jdubois/jdubois-configuration/master/install.sh)"
+#   sh -c "$(wget -qO- https://raw.githubusercontent.com/wayne-optin/personal/master/ubuntu_install.sh)"
 #
 setup_color() {
 	# Only use colors if connected to a terminal
@@ -47,8 +47,8 @@ install_jhipster() {
 }
 
 setup_workspace() {
-    mkdir /home/julien/workspace
-    chown -R julien:julien /home/julien/workspace
+    mkdir /home/wstidolph/workspace
+    chown -R wstidolph:wstidolph /home/wstidolph/workspace
 }
 
 main() {
@@ -76,3 +76,12 @@ main() {
     install_jhipster
 
     setup_workspace
+
+	printf "$BLUE"
+	cat <<-'EOF'
+    Congratulations, setup is complete!
+	EOF
+	printf "$RESET"
+}
+
+main "$@"
