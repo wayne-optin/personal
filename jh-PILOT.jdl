@@ -49,11 +49,26 @@ application {
 		packageName com.optin.core
 		applicationType microservice 
 		serverPort 8082
-		prodDatabaseType postgresql,cacheProvider hazelcast
+		prodDatabaseType postgresql,
+		cacheProvider hazelcast
 		authenticationType oauth2,
 		serviceDiscoveryType eureka
 	}
 	entities ExternalCmd, Employer, Worker, TimeWindow, ContactInfo, WorkerContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+}
+
+application {
+	config {
+		baseName comms
+		packageName com.optin.worker
+		applicationType microservice
+		serverPort 8083,
+		prodDatabaseType postgresql
+		cacheProvider hazelcast
+		authenticationType oauth2
+		serviceDiscoveryType eureka
+	}
+	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone
 }
 
 application {
@@ -71,7 +86,7 @@ application {
 
 deployment {
 	deploymentType kubernetes
-	appsFolders [gateway, domain, onboarding, uaa]
+	appsFolders [gateway, domain, onboarding, comms, uaa]
 	dockerRepositoryName "optindev"  // pw g3t0pt1n1
 	serviceDiscoveryType no
 	istio true
@@ -82,7 +97,7 @@ deployment {
 
 deployment {
  	deploymentType docker-compose
- 	appsFolders [gateway, domain, onboarding, uaa]
+ 	appsFolders [gateway, domain, onboarding, comms, uaa]
  	dockerRepositoryName "optindev" // pw g3t0pt1n1
 }
 // entity definitions here
@@ -93,15 +108,15 @@ deployment {
 entity ExternalCmd {
 	content TextBlob required 
 	rcd ZonedDateTime
-	status ExternCmdStatus
+	status ExternalCmdStatus
 	result TextBlob
 }
 
-enum ExternCmdStatus {
+enum ExternalCmdStatus {
 	RCD, REJ, INPROC, FAILED, COMPLETE
 }
 
-service ExternCmd with serviceClass
+service ExternalCmd with serviceClass
 
 /**
  * Entity Employer aka Client
@@ -171,32 +186,7 @@ enum WorkerType {
 enum SourcedFrom {
 	DO_NOT_STAFF, WORKING, HIRED, WALKS_OFF_JOB, PHONE_DISC, MOVED_OUT_OF_STATE, NO_SHOW_ALL_WEEK, NO_ENGLISH, FOUND_JOB, APPLIED
 }
-entity ContactInfo {
-	date LocalDate // as-of date of contact info
-	emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailWork String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailHome String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailOther String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	phonePrimary String
-	phonePrimaryType PhoneType
-	phoneHome String
-	phoneHomeType PhoneType
-	phoneMobile String
-	phoneMobileType PhoneType
-	phoneFax String
-}
-entity WorkerContactLog {
-	date ZonedDateTime
-	workerContactType WorkerContactType
-	contactPurpose WorkerContactPurpose
-	comment String
-}
-enum WorkerContactType {
-	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
-}
-enum WorkerContactPurpose {
-	APPLICATION, INTERVIEW, DECISION, OFFER, ASSIGN, WITHDRAW, OTHER
-}
+
 
 relationship OneToOne {
 	ContactInfo{addrHome}      to Address
@@ -287,6 +277,77 @@ entity JobShift {
 	numWorkersReq Integer
 	numWorkersShort Integer
 }
+// COMMS
+enum PhoneType {
+	VOICE, TEXT, SMART
+}
+entity Phone {
+	num String required
+	type PhoneType
+}
+entity ContactInfo {
+	date LocalDate // as-of date of contact info
+	emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailWork String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailHome String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailOther String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	phonePrimary String
+	phonePrimaryType PhoneType
+	phoneHome String
+	phoneHomeType PhoneType
+	phoneMobile String
+	phoneMobileType PhoneType
+	phoneFax String
+}
+entity ContactLog {
+	date ZonedDateTime
+	contactType ContactType
+	contactPurpose ContactPurpose
+	comment String
+}
+enum ContactType {
+	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
+}
+enum ContactPurpose {
+	W_APPLICATION, W_INTERVIEW, W_APPLICATION_DECISION, W_OFFER, W_ASSIGN, W_WITHDRAW, W_OTHER,
+	J_CREATE, J_CANCEL, J_PROBLEM
+}
+enum CommsType {
+	PHONE, SMS, EMAIL
+}
+enum CommsStatus {
+	PENDING, REJ, INPROCESS, SUCCEEDED, FAILED
+}
+enum CommsCallbackMethod {
+	GET, POST
+}
+entity CommsCmd {
+	workerId String
+	commType CommsType
+	phoneFrom String
+	sched String
+	content TextBlob
+	status CommsStatus
+}
+entity CommsProvider {
+	name String
+	commsProviderPhone String
+	accountNumber String
+}
+entity CommsChannelConfig {	
+	commsProviderName String
+	platform String
+	platformCred String
+	platformURL String
+	callbackURL String
+	callbackMethod CommsCallbackMethod
+	statusCallbackUrl String
+	statusCallbackMethod CommsCallbackMethod
+}
+
+relationship OneToMany {
+	CommsProvider{channel} to CommsChannelConfig{provider}
+}
 
 // common stuff
 
@@ -298,13 +359,6 @@ entity Address {
 	zip Integer
 }
 
-enum PhoneType {
-	VOICE, TEXT, SMART
-}
-entity Phone {
-	num String required
-	type PhoneType
-}
 enum StateAbbrev {
 	CA,
 	OR,
