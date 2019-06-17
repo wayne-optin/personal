@@ -101,7 +101,7 @@ deployment {
 	istio true
 	kubernetesServiceType Ingress
 	kubernetesNamespace nwic
-	ingressDomain "35.195.81.130.nip.io" // FIX THIS TO LOCAL IP
+	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
 }
 
 deployment {
