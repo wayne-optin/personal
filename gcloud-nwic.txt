@@ -1,0 +1,19 @@
+// commands and notes for the gcloud/istio test deployment
+// https://medium.com/@simionrazvan/microservices-using-jhipster-kubernetes-istio-bf75e992612a
+
+gcloud container clusters create nwic-cluster --cluster-version 1.11 --zone us-central1-a --num-nodes 4 --machine-type n1-standard-2
+gcloud container clusters get-credentials nwic-cluster --zone us-central1-a
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user="wayne.stidolph@getopt.in"
+
+cd C:\ProgramFiles\istio-1.0.6 # or whateber version you use
+kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
+kubectl apply -f install/kubernetes/istio-demo.yaml --as=admin --as-group=system:masters
+kubectl get pods -n istio-system
+kubectl get services -n istio-system # to copy out the Istio ingress IP
+
+JHipster adds config files:
+    grafana (metrics visulaization)
+    kiali (mesh visulaization), and
+    jaeger (distributed tracing)
+    
+so I guess we don't need ELK?
