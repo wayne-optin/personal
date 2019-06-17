@@ -96,7 +96,7 @@ application {
 
 deployment {
 	deploymentType kubernetes
-	appsFolders [gateway, domain, onboarding, comms, uaa]
+	appsFolders [ui, domain, onboarding, comms, uaa]
 	dockerRepositoryName "optindev"  // pw g3t0pt1n1
 	serviceDiscoveryType no
 	istio true
@@ -107,7 +107,7 @@ deployment {
 
 deployment {
  	deploymentType docker-compose
- 	appsFolders [gateway, domain, onboarding, comms, uaa]
+ 	appsFolders [ui, domain, onboarding, comms, uaa]
  	dockerRepositoryName "optindev" // pw g3t0pt1n1
 	dockerRepositoryName "optindev"
 }
