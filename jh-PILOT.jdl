@@ -14,15 +14,16 @@
  }
  application {
   config {
-    baseName gateway,
+    baseName ui,
     packageName com.optin.nwic,
     applicationType gateway,
     serverPort 8080,
     prodDatabaseType postgresql,
-    cacheProvider hazelcast,
+    cacheProvider no,
     authenticationType oauth2,
     uaaBaseName "uaa",
-    serviceDiscoveryType eureka
+    serviceDiscoveryType no
+	useSass true
   }
   entities *
 }
@@ -38,7 +39,7 @@ application {
     cacheProvider hazelcast,
     authenticationType oauth2,
     uaaBaseName "uaa",
-    serviceDiscoveryType eureka
+    serviceDiscoveryType no
   }
   entities Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
@@ -54,7 +55,7 @@ application {
 		prodDatabaseType postgresql,
 		cacheProvider hazelcast
 		authenticationType oauth2,
-		serviceDiscoveryType eureka
+		serviceDiscoveryType no
 	}
 	entities ExternalCmd
 }
@@ -70,7 +71,7 @@ application {
 		prodDatabaseType postgresql
 		cacheProvider hazelcast
 		authenticationType oauth2
-		serviceDiscoveryType eureka
+		serviceDiscoveryType no
 	}
 	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone, Address
 }
@@ -100,7 +101,7 @@ deployment {
 	serviceDiscoveryType no
 	istio true
 	kubernetesServiceType Ingress
-	kubernetesNamespace nwic
+	kubernetesNamespace nwic-pilot
 	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
 }
 
