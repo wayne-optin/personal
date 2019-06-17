@@ -40,7 +40,7 @@ application {
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
-  entities Employer, Worker, TimeWindow, ContactInfo, WorkerContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+  entities Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
 
 application {
@@ -54,7 +54,7 @@ application {
 		authenticationType oauth2,
 		serviceDiscoveryType eureka
 	}
-	entities ExternalCmd, Employer, Worker, TimeWindow, ContactInfo, WorkerContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+	entities ExternalCmd, Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
 
 application {
@@ -68,7 +68,7 @@ application {
 		authenticationType oauth2
 		serviceDiscoveryType eureka
 	}
-	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone
+	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone, Address
 }
 
 application {
@@ -76,7 +76,10 @@ application {
 		baseName onboarding
 		packageName  com.optin.nwic
 		applicationType monolith
-		authenticationType oauth2,
+		authenticationType oauth2
+		prodDatabaseType postgresql
+		cacheProvider hazelcast
+		serverPort 8084
 	}
     entities Worker, JobAssignment, Employer, TimeWindow, ContactInfo, JobSkill, Phone, Address
 }
