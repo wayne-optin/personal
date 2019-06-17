@@ -22,7 +22,7 @@
     cacheProvider no,
     authenticationType oauth2,
     uaaBaseName "uaa",
-    serviceDiscoveryType no
+    serviceDiscoveryType eureka
 	useSass true
   }
   entities *
@@ -39,7 +39,7 @@ application {
     cacheProvider hazelcast,
     authenticationType oauth2,
     uaaBaseName "uaa",
-    serviceDiscoveryType no
+    serviceDiscoveryType eureka
   }
   entities Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
@@ -55,7 +55,7 @@ application {
 		prodDatabaseType postgresql,
 		cacheProvider hazelcast
 		authenticationType oauth2,
-		serviceDiscoveryType no
+		serviceDiscoveryType eureka
 	}
 	entities ExternalCmd
 }
@@ -71,7 +71,7 @@ application {
 		prodDatabaseType postgresql
 		cacheProvider hazelcast
 		authenticationType oauth2
-		serviceDiscoveryType no
+		serviceDiscoveryType eureka
 	}
 	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone, Address
 }
@@ -98,19 +98,13 @@ deployment {
 	deploymentType kubernetes
 	appsFolders [ui, domain, onboarding, comms, uaa]
 	dockerRepositoryName "optindev"  // pw g3t0pt1n1
-	serviceDiscoveryType no
+	serviceDiscoveryType eureka
 	istio true
 	kubernetesServiceType Ingress
 	kubernetesNamespace nwic-pilot
 	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
 }
 
-deployment {
- 	deploymentType docker-compose
- 	appsFolders [ui, domain, onboarding, comms, uaa]
- 	dockerRepositoryName "optindev" // pw g3t0pt1n1
-	dockerRepositoryName "optindev"
-}
 // entity definitions here
 
 /** Entity ExternCmd (experimental)
