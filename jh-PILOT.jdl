@@ -43,6 +43,8 @@ application {
   entities Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
 
+microservice Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address with domain
+
 application {
 	config {
 		baseName integration,
@@ -54,8 +56,10 @@ application {
 		authenticationType oauth2,
 		serviceDiscoveryType eureka
 	}
-	entities ExternalCmd, Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+	entities ExternalCmd
 }
+
+microservice ExternalCmd with integration
 
 application {
 	config {
@@ -70,6 +74,8 @@ application {
 	}
 	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone, Address
 }
+
+microservice CommsCmd with comms
 
 application {
 	config {
@@ -102,6 +108,7 @@ deployment {
  	deploymentType docker-compose
  	appsFolders [gateway, domain, onboarding, comms, uaa]
  	dockerRepositoryName "optindev" // pw g3t0pt1n1
+	dockerRepositoryName "optindev"
 }
 // entity definitions here
 
@@ -244,6 +251,7 @@ entity JobSkill {
 	monthsExp Integer
 }
 service JobSkill with serviceClass
+paginate JobSkill with pagination
 filter JobSkill
 
 entity JobSite {
@@ -280,6 +288,11 @@ entity JobShift {
 	numWorkersReq Integer
 	numWorkersShort Integer
 }
+
+service JobShift with serviceClass
+paginate JobShift with pagination
+filter JobShift
+
 // COMMS
 enum PhoneType {
 	VOICE, TEXT, SMART
@@ -308,6 +321,10 @@ entity ContactLog {
 	contactPurpose ContactPurpose
 	comment String
 }
+paginate ContactLog with pagination
+service ContactLog with serviceClass
+filter ContactLog
+
 enum ContactType {
 	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
 }
@@ -332,6 +349,10 @@ entity CommsCmd {
 	content TextBlob
 	status CommsStatus
 }
+
+service CommsCmd with serviceClass
+filter CommsCmd
+
 entity CommsProvider {
 	name String
 	commsProviderPhone String
