@@ -41,10 +41,10 @@ application {
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
-  entities Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+  entities Employer, Worker, TimeWindow, ContactInfo, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
 }
 
-microservice Employer, Worker, TimeWindow, ContactInfo, ContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address with domain
+microservice Employer, Worker, TimeWindow, ContactInfo, Job, JobShift, JobSkill, JobSite, JobAssignment with domain
 
 application {
 	config {
@@ -65,7 +65,7 @@ microservice ExternalCmd with integration
 application {
 	config {
 		baseName comms
-		packageName com.optin.worker
+		packageName com.optin.core
 		applicationType microservice
 		serverPort 8083,
 		prodDatabaseType postgresql
@@ -73,10 +73,10 @@ application {
 		authenticationType oauth2
 		serviceDiscoveryType eureka
 	}
-	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLog, Phone, Address
+	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
 }
 
-microservice CommsCmd with comms
+microservice CommsCmd, ContactLogEntry with comms
 
 application {
 	config {
@@ -209,11 +209,9 @@ relationship OneToMany {
 
 relationship ManyToOne {
 	Worker{employer} to Employer{employee}
-	Worker{currentAddr} to Address{workerNow}
 }
 
 relationship ManyToMany {
-	Worker to Address
 	Worker{jobSkill} to JobSkill{skilledWorker}
 	Job{reqSkill} to JobSkill{reqFor}
 }
@@ -310,15 +308,15 @@ entity ContactInfo {
 	phoneMobileType PhoneType
 	phoneFax String
 }
-entity ContactLog {
+entity ContactLogEntry {
 	date ZonedDateTime
 	contactType ContactType
 	contactPurpose ContactPurpose
 	comment String
 }
-paginate ContactLog with pagination
-service ContactLog with serviceClass
-filter ContactLog
+paginate ContactLogEntry with pagination
+service ContactLogEntry with serviceClass
+filter ContactLogEntry
 
 enum ContactType {
 	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
