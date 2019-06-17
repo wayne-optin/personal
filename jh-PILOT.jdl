@@ -1,0 +1,340 @@
+/**
+ * JHipster JDL model for the NWIC experiment
+ * @author wstidolph 2019/06/17 v 0.1
+ */
+ application {
+ 	config {
+ 		baseName uaa,
+		packageName com.optin.core
+ 		applicationType uaa,
+ 		authenticationType uaa,
+ 		uaaBaseName "uaa",
+ 		prodDatabaseType postgresql,
+ 	}
+ }
+ application {
+  config {
+    baseName gateway,
+    packageName com.optin.nwic,
+    applicationType gateway,
+    serverPort 8080,
+    prodDatabaseType postgresql,
+    cacheProvider hazelcast,
+    authenticationType oauth2,
+    uaaBaseName "uaa",
+    serviceDiscoveryType eureka
+  }
+  entities *
+}
+
+// one big "microservice" for the domain to simplify debugging, break up later (maybe)
+application {
+  config {
+	baseName domain,
+	packageName com.optin.nwic,
+	applicationType microservice,
+	serverPort 8081
+	prodDatabaseType postgresql,
+    cacheProvider hazelcast,
+    authenticationType oauth2,
+    uaaBaseName "uaa",
+    serviceDiscoveryType eureka
+  }
+  entities Employer, Worker, TimeWindow, ContactInfo, WorkerContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+}
+
+application {
+	config {
+		baseName integration,
+		packageName com.optin.core
+		applicationType microservice 
+		serverPort 8082
+		prodDatabaseType postgresql,cacheProvider hazelcast
+		authenticationType oauth2,
+		serviceDiscoveryType eureka
+	}
+	entities ExternalCmd, Employer, Worker, TimeWindow, ContactInfo, WorkerContactLog, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+}
+
+application {
+	config {
+		baseName onboarding
+		packageName  com.optin.nwic
+		applicationType monolith
+		authenticationType oauth2,
+	}
+    entities Worker, JobAssignment, Employer, TimeWindow, ContactInfo, JobSkill, Phone, Address
+}
+
+// deployment2
+// istio changes in JH 6, just set istio true
+
+deployment {
+	deploymentType kubernetes
+	appsFolders [gateway, domain, onboarding, uaa]
+	dockerRepositoryName "optindev"  // pw g3t0pt1n1
+	serviceDiscoveryType no
+	istio true
+	kubernetesServiceType Ingress
+	kubernetesNamespace nwic
+	ingressDomain "35.195.81.130.nip.io" // FIX THIS TO LOCAL IP
+}
+
+deployment {
+ 	deploymentType docker-compose
+ 	appsFolders [gateway, domain, onboarding, uaa]
+ 	dockerRepositoryName "optindev" // pw g3t0pt1n1
+}
+// entity definitions here
+
+/** Entity ExternCmd (experimental)
+* upload service experiment - can we treat external integrations as entities
+*/
+entity ExternalCmd {
+	content TextBlob required 
+	rcd ZonedDateTime
+	status ExternCmdStatus
+	result TextBlob
+}
+
+enum ExternCmdStatus {
+	RCD, REJ, INPROC, FAILED, COMPLETE
+}
+
+service ExternCmd with serviceClass
+
+/**
+ * Entity Employer aka Client
+ * denormalized a bunch of data just for view model simplicity
+ */
+entity Employer {
+	name String
+	isSubbusiness Boolean
+	notes String
+	address1 String
+	address2 String
+	cityTown String
+	state StateAbbrev
+	zipcode Integer
+	principalNameFirst String
+	principalNameLast String
+	principlePhoneOffice String
+	principlePhoneMobile String
+	principlePhoneFax String
+	principalEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	hasBackupContact Boolean
+	backupNameFirst String
+	backupNameLast String
+	backupPhoneOffice String
+	backupPhoneMobile String
+	backupePhoneFax String
+	backupEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+}
+relationship ManyToOne {
+	Employer{superbusiness} to Employer
+}
+
+// Worker stuff
+/**
+ * Entity Worker
+ */
+entity Worker { 
+    nameFirst String 
+    nameLast String required
+    nameNick String
+    active Boolean
+    status WorkerStatus
+    recruiter Boolean
+    notes String
+    owner String
+    sourcedFrom SourcedFrom
+	workerType WorkerType
+    // some denormalized fields
+    emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+    phonePrimary String
+    phonePrimaryType PhoneType
+    availStart LocalDate
+    availEnd LocalDate
+}
+
+service Worker with serviceClass
+paginate Worker with pagination
+filter Worker
+
+enum WorkerStatus {
+	ALL, PENDING, APPROVED, DO_NOT_STAFF
+}
+enum WorkerType {
+	REGULAR, DAY_LABORER
+//	CANDIDATE, CONTACT, OTHER, HIRING_AUTH, CONTACT_HIRING_AUTH, CONTACT_OTHER, RECRUITER
+}
+enum SourcedFrom {
+	DO_NOT_STAFF, WORKING, HIRED, WALKS_OFF_JOB, PHONE_DISC, MOVED_OUT_OF_STATE, NO_SHOW_ALL_WEEK, NO_ENGLISH, FOUND_JOB, APPLIED
+}
+entity ContactInfo {
+	date LocalDate // as-of date of contact info
+	emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailWork String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailHome String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	emailOther String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+	phonePrimary String
+	phonePrimaryType PhoneType
+	phoneHome String
+	phoneHomeType PhoneType
+	phoneMobile String
+	phoneMobileType PhoneType
+	phoneFax String
+}
+entity WorkerContactLog {
+	date ZonedDateTime
+	workerContactType WorkerContactType
+	contactPurpose WorkerContactPurpose
+	comment String
+}
+enum WorkerContactType {
+	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
+}
+enum WorkerContactPurpose {
+	APPLICATION, INTERVIEW, DECISION, OFFER, ASSIGN, WITHDRAW, OTHER
+}
+
+relationship OneToOne {
+	ContactInfo{addrHome}      to Address
+	JobShift to TimeWindow
+	Worker{currentJob} to JobAssignment{worker}
+}
+
+relationship OneToMany {
+	Worker{jobHistory} to JobAssignment
+	Worker{avail} to TimeWindow
+	Job{shifts} to JobShift{job}
+	JobSite{jobs} to Job{site}
+	Employer{defSkills} to JobSkill{definedBy}
+}
+
+relationship ManyToOne {
+	Worker{employer} to Employer{employee}
+	Worker{currentAddr} to Address{workerNow}
+}
+
+relationship ManyToMany {
+	Worker to Address
+	Worker{jobSkill} to JobSkill{skilledWorker}
+	Job{reqSkill} to JobSkill{reqFor}
+}
+
+// JOB related
+entity Job { 
+    jobName String required
+    clientName String
+    startDate LocalDate
+    status JobStatus
+    workersNeeded Integer
+    workersShort Integer
+    jobContact String
+    jobPhone String
+    jobCity String
+    jobState StateAbbrev
+}
+
+service Job with serviceClass
+filter Job
+paginate Job with pagination
+
+entity JobSkill {
+	category String
+	skillName String
+	isBool Boolean
+	level Integer
+	isLevelMin Boolean
+	isLevelMax Boolean
+	monthsExp Integer
+}
+service JobSkill with serviceClass
+filter JobSkill
+
+entity JobSite {
+	jobName String
+	jobCity String
+	jobState StateAbbrev
+	clientName String
+}
+
+enum JobStatus {
+	OPEN, FILLED, CLOSED, CANCELED
+}
+
+/**
+ * entity JobAssignment
+ * similar to Slot in domain model
+ */
+entity JobAssignment {
+	clientNickname String
+	startDate LocalDate
+	endDate LocalDate
+	notes String
+	numMissedDays Integer
+	workerRating Integer
+	employerSatisfied Boolean
+}
+
+service JobAssignment with serviceClass
+paginate JobAssignment with pagination
+filter JobAssignment
+
+entity JobShift {
+	shiftName String required
+	numWorkersReq Integer
+	numWorkersShort Integer
+}
+
+// common stuff
+
+entity Address {
+	street String
+	streetLine2 String
+	city String
+	state StateAbbrev
+	zip Integer
+}
+
+enum PhoneType {
+	VOICE, TEXT, SMART
+}
+entity Phone {
+	num String required
+	type PhoneType
+}
+enum StateAbbrev {
+	CA,
+	OR,
+	WA
+}
+
+enum StateNames {
+	CALIFORNIA,
+	OREGON,
+	WASHINGTON
+}
+
+enum TimeName {
+	NONE, MIDNIGHT, MORNING, NOON, AFTERNOON, EVENING, VARIABLE 	
+}
+
+entity TimeWindow {
+	name String
+	isWorkerTime Boolean // alternative is "Shift" time
+	startTime String
+	endTime String
+	// I guess we could do an Array but that's 24 bytes of overhead, and expensive. So, columns.
+	isOnSun Boolean
+	isOnMon Boolean
+	isOnTu  Boolean
+	isOnWed Boolean
+	isOnTh  Boolean
+	isOnFri Boolean
+	isOnSat Boolean
+}
+service TimeWindow with serviceClass
+filter TimeWindow
+
