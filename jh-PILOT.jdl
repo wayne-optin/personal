@@ -38,7 +38,7 @@ application {
     serverPort 8081
     prodDatabaseType postgresql,
     cacheProvider hazelcast,
-    authenticationType uaa,
+//    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
@@ -50,8 +50,7 @@ application {
 }
 
 microservice Employer, Worker, TimeWindow,
-           Job, JobAssignment, JobShift, JobSite, JobSkill,
-           Phone, Address
+           Job, JobAssignment, JobShift, JobSite, JobSkill
            with domain
 
 application {
@@ -62,7 +61,7 @@ application {
     serverPort 8082
     prodDatabaseType postgresql,
     cacheProvider hazelcast
-    authenticationType uaa,
+//    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
@@ -79,11 +78,11 @@ application {
     serverPort 8083,
     prodDatabaseType postgresql
     cacheProvider hazelcast
-    authenticationType uaa
+ //   authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
-  entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
+  entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Address, Phone
 }
 
 microservice CommsCmd, CommsProvider, CommsChannelConfig, CommsTemplate, ContactInfo, ContactLogEntry with comms
@@ -96,7 +95,7 @@ application {
     serverPort 8084
     prodDatabaseType postgresql
     cacheProvider hazelcast
-    authenticationType uaa
+//    authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
