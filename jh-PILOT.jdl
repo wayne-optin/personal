@@ -24,7 +24,7 @@
     authenticationType oauth2,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
-	useSass true
+    useSass true
   }
   entities *
 }
@@ -32,87 +32,87 @@
 // one big "microservice" for the domain to simplify debugging, break up later (maybe)
 application {
   config {
-	baseName domain,
-	packageName com.optin.nwic,
-	applicationType microservice,
-	serverPort 8081
-	prodDatabaseType postgresql,
+    baseName domain,
+    packageName com.optin.nwic,
+    applicationType microservice,
+    serverPort 8081
+    prodDatabaseType postgresql,
     cacheProvider hazelcast,
     authenticationType oauth2,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
-  entities	Employer, Worker, TimeWindow,
-			CommsCmd, CommsTemplate, ContactInfo, ContactLogEntry,
-			Job, JobAssignment, JobShift, JobSite, JobSkill,
-			JobSummary, JobSkillSummary,
-			Phone, Address
+  entities Employer, Worker, TimeWindow,
+           CommsCmd, CommsTemplate, ContactInfo, ContactLogEntry,
+           Job, JobAssignment, JobShift, JobSite, JobSkill,
+           JobSummary, JobSkillSummary,
+           Phone, Address
 }
 
 microservice Employer, Worker, TimeWindow,
-			 Job, JobAssignment, JobShift, JobSite, JobSkill,
-			 Phone, Address
-  with domain
+           Job, JobAssignment, JobShift, JobSite, JobSkill,
+           Phone, Address
+           with domain
 
 application {
-	config {
-		baseName integration,
-		packageName com.optin.core
-		applicationType microservice 
-		serverPort 8082
-		prodDatabaseType postgresql,
-		cacheProvider hazelcast
-		authenticationType oauth2,
-		serviceDiscoveryType eureka
-	}
-	entities ExternalCmd, CommsCmd, CommsTemplate
+  config {
+    baseName integration,
+    packageName com.optin.core
+    applicationType microservice 
+    serverPort 8082
+    prodDatabaseType postgresql,
+    cacheProvider hazelcast
+    authenticationType oauth2,
+    serviceDiscoveryType eureka
+  }
+  entities ExternalCmd, CommsCmd, CommsTemplate
 }
 
 microservice ExternalCmd with integration
 
 application {
-	config {
-		baseName comms
-		packageName com.optin.core
-		applicationType microservice
-		serverPort 8083,
-		prodDatabaseType postgresql
-		cacheProvider hazelcast
-		authenticationType oauth2
-		serviceDiscoveryType eureka
-	}
-	entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
+  config {
+    baseName comms
+    packageName com.optin.core
+    applicationType microservice
+    serverPort 8083,
+    prodDatabaseType postgresql
+    cacheProvider hazelcast
+    authenticationType oauth2
+    serviceDiscoveryType eureka
+  }
+  entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
 }
 
 microservice CommsCmd, CommsProvider, CommsChannelConfig, CommsTemplate, ContactInfo, ContactLogEntry with comms
 
 application {
-	config {
-		baseName onboarding,
-		packageName com.optin.nwic
-		applicationType microservice
-		serverPort 8084
-		prodDatabaseType postgresql
-		cacheProvider hazelcast
-		authenticationType oauth2
-		serviceDiscoveryType eureka
-	}
-	entities Candidate, JobSummary, JobSkillSummary, ContactInfo, ContactLogEntry, Phone, Address
+  config {
+    baseName onboarding,
+    packageName com.optin.nwic
+    applicationType microservice
+    serverPort 8084
+    prodDatabaseType postgresql
+    cacheProvider hazelcast
+    authenticationType oauth2
+    serviceDiscoveryType eureka
+  }
+  entities Candidate, JobSummary, JobSkillSummary, ContactInfo, ContactLogEntry, Phone, Address
 }
 microservice Candidate, JobSummary, JobSkillSummary with onboarding
 
 // istio changes in JH 6, just set istio true (online docs are wrong)
 
 deployment {
-	deploymentType kubernetes
-	appsFolders [ui, domain, onboarding, comms, uaa]
-	dockerRepositoryName "optindev"  // pw g3t0pt1n1
-	serviceDiscoveryType eureka
-	istio true
-	kubernetesServiceType Ingress
-	kubernetesNamespace nwic-pilot
-//	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
-    ingressDomain "localhost" // because I run a local istio cluster for dev
+  deploymentType kubernetes
+  appsFolders [ui, domain, onboarding, comms, uaa]
+  dockerRepositoryName "optindev"  // pw g3t0pt1n1
+  serviceDiscoveryType eureka
+  istio true
+  kubernetesServiceType Ingress
+  kubernetesNamespace nwic-pilot
+//  ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
+  ingressDomain "localhost" // because I run a local istio cluster for dev
 }
 
 // entity definitions here
@@ -121,14 +121,14 @@ deployment {
 * upload service experiment - can we treat external integrations as entities
 */
 entity ExternalCmd {
-	content TextBlob required 
-	rcd ZonedDateTime
-	status ExternalCmdStatus
-	result TextBlob
+  content TextBlob required 
+  rcd ZonedDateTime
+  status ExternalCmdStatus
+  result TextBlob
 }
 
 enum ExternalCmdStatus {
-	RCD, REJ, INPROC, FAILED, COMPLETE
+  RCD, REJ, INPROC, FAILED, COMPLETE
 }
 
 service ExternalCmd with serviceClass
@@ -138,91 +138,91 @@ service ExternalCmd with serviceClass
  * denormalized a bunch of data just for view model simplicity
  */
 entity Employer {
-	name String
-	isSubbusiness Boolean
-	notes String
-	address1 String
-	address2 String
-	cityTown String
-	state StateAbbrev
-	zipcode Integer
-	principalNameFirst String
-	principalNameLast String
-	principlePhoneOffice String
-	principlePhoneMobile String
-	principlePhoneFax String
-	principalEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	hasBackupContact Boolean
-	backupNameFirst String
-	backupNameLast String
-	backupPhoneOffice String
-	backupPhoneMobile String
-	backupePhoneFax String
-	backupEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  name String
+  isSubbusiness Boolean
+  notes String
+  address1 String
+  address2 String
+  cityTown String
+  state StateAbbrev
+  zipcode Integer
+  principalNameFirst String
+  principalNameLast String
+  principlePhoneOffice String
+  principlePhoneMobile String
+  principlePhoneFax String
+  principalEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  hasBackupContact Boolean
+  backupNameFirst String
+  backupNameLast String
+  backupPhoneOffice String
+  backupPhoneMobile String
+  backupePhoneFax String
+  backupEmail  String required pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
 }
 relationship ManyToOne {
-	Employer{superbusiness} to Employer
+  Employer{superbusiness} to Employer
 }
 
 /**
 * Entity Candidate
 */
 entity Candidate {
-	nameFirst String 
-    nameLast String required
-    nameNick String
-    active Boolean
-    status WorkerStatus
-    recruiter Boolean
-    notes String
-    owner String
-    sourcedFrom SourcedFrom
-	workerType WorkerType
-    // some denormalized fields
-    emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-    phonePrimary String
-    phonePrimaryType PhoneType
-    availStart LocalDate
-    availEnd LocalDate
+  nameFirst String 
+  nameLast String required
+  nameNick String
+  active Boolean
+  status WorkerStatus
+  recruiter Boolean
+  notes String
+  owner String
+  sourcedFrom SourcedFrom
+  workerType WorkerType
+  // some denormalized fields
+  emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  phonePrimary String
+  phonePrimaryType PhoneType
+  availStart LocalDate
+  availEnd LocalDate
 }
 service Candidate with serviceClass
 paginate Candidate with pagination
 filter Candidate
 
 entity JobSummary {
-	jobName String required
-    clientName String
-    startDate LocalDate
-    endDate LocalDate
-	workerRating Integer
-	employerSatisfied Boolean
+  jobName String required
+  clientName String
+  startDate LocalDate
+  endDate LocalDate
+  workerRating Integer
+  employerSatisfied Boolean
 }
 
 relationship OneToMany {
-	Candidate{jobs} to JobSummary
-	JobSummary{skills} to JobSkillSummary
+  Candidate{jobs} to JobSummary
+  JobSummary{skills} to JobSkillSummary
 }
 
 /**
  * Entity Worker
  */
 entity Worker { 
-    nameFirst String 
-    nameLast String required
-    nameNick String
-    active Boolean
-    status WorkerStatus
-    recruiter Boolean
-    notes String
-    owner String
-    sourcedFrom SourcedFrom
-	workerType WorkerType
-    // some denormalized fields
-    emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-    phonePrimary String
-    phonePrimaryType PhoneType
-    availStart LocalDate
-    availEnd LocalDate
+  nameFirst String 
+  nameLast String required
+  nameNick String
+  active Boolean
+  status WorkerStatus
+  recruiter Boolean
+  notes String
+  owner String
+  sourcedFrom SourcedFrom
+  workerType WorkerType
+  // some denormalized fields
+  emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  phonePrimary String
+  phonePrimaryType PhoneType
+  availStart LocalDate
+  availEnd LocalDate
 }
 
 service Worker with serviceClass
@@ -230,53 +230,53 @@ paginate Worker with pagination
 filter Worker
 
 enum WorkerStatus {
-	ALL, PENDING, APPROVED, DO_NOT_STAFF
+  ALL, PENDING, APPROVED, DO_NOT_STAFF
 }
 enum WorkerType {
-	REGULAR, DAY_LABORER
+  REGULAR, DAY_LABORER
 //	CANDIDATE, CONTACT, OTHER, HIRING_AUTH, CONTACT_HIRING_AUTH, CONTACT_OTHER, RECRUITER
 }
 enum SourcedFrom {
-	DO_NOT_STAFF, WORKING, HIRED, WALKS_OFF_JOB, PHONE_DISC, MOVED_OUT_OF_STATE, NO_SHOW_ALL_WEEK, NO_ENGLISH, FOUND_JOB, APPLIED
+  DO_NOT_STAFF, WORKING, HIRED, WALKS_OFF_JOB, PHONE_DISC, MOVED_OUT_OF_STATE, NO_SHOW_ALL_WEEK, NO_ENGLISH, FOUND_JOB, APPLIED
 }
 
 relationship OneToOne {
-	ContactInfo{addrHome}      to Address
-	JobShift to TimeWindow
-	Worker{currentJob} to JobAssignment{worker}
+  ContactInfo{addrHome} to Address
+  JobShift to TimeWindow
+  Worker{currentJob} to JobAssignment{worker}
 }
 
 relationship OneToMany {
-	Worker{jobHistory} to JobAssignment
-	Worker{avail} to TimeWindow
-	Job{shifts} to JobShift{job}
-	JobShift{assigned} to JobAssignment{jobShift}
-	JobSite{jobs} to Job{site}
-	Employer{defSkills} to JobSkill{definedBy}
+  Worker{jobHistory} to JobAssignment
+  Worker{avail} to TimeWindow
+  Job{shifts} to JobShift{job}
+  JobShift{assigned} to JobAssignment{jobShift}
+  JobSite{jobs} to Job{site}
+  Employer{defSkills} to JobSkill{definedBy}
 }
 
 relationship ManyToOne {
-	Worker{employer} to Employer{employee}
+  Worker{employer} to Employer{employee}
 }
 
 relationship ManyToMany {
-	Worker{jobSkill} to JobSkill{skilledWorker}
-	Job{reqSkill} to JobSkill{reqFor}
+  Worker{jobSkill} to JobSkill{skilledWorker}
+  Job{reqSkill} to JobSkill{reqFor}
 }
 
 // JOB related
 entity Job { 
-    jobName String required
-    clientName String
-    startDate LocalDate
-	endDate LocalDate
-    status JobStatus
-    workersNeeded Integer
-    workersShort Integer
-    jobContact String
-    jobPhone String
-    jobCity String
-    jobState StateAbbrev
+  jobName String required
+  clientName String
+  startDate LocalDate
+  endDate LocalDate
+  status JobStatus
+  workersNeeded Integer
+  workersShort Integer
+  jobContact String
+  jobPhone String
+  jobCity String
+  jobState StateAbbrev
 }
 
 service Job with serviceClass
@@ -286,30 +286,30 @@ paginate Job with pagination
 
 // resuable Job-related entities
 entity JobSite {
-	jobName String
-	jobCity String
-	jobState StateAbbrev
-	clientName String
+  jobName String
+  jobCity String
+  jobState StateAbbrev
+  clientName String
 }
 
 entity JobSkill {
-	category String
-	skillName String
-	isBool Boolean
-	level Integer
-	isLevelMin Boolean
-	isLevelMax Boolean
-	monthsExp Integer
+  category String
+  skillName String
+  isBool Boolean
+  level Integer
+  isLevelMin Boolean
+  isLevelMax Boolean
+  monthsExp Integer
 }
 
 entity JobSkillSummary {
-	category String
-	skillName String
-	isBool Boolean
-	level Integer
-	isLevelMin Boolean
-	isLevelMax Boolean
-	monthsExp Integer
+  category String
+  skillName String
+  isBool Boolean
+  level Integer
+  isLevelMin Boolean
+  isLevelMax Boolean
+  monthsExp Integer
 }
 
 service JobSkill with serviceClass
@@ -317,7 +317,7 @@ filter JobSkill
 paginate JobSkill with pagination
 
 enum JobStatus {
-	OPEN, FILLED, CLOSED, CANCELED
+  OPEN, FILLED, CLOSED, CANCELED
 }
 
 /**
@@ -325,13 +325,13 @@ enum JobStatus {
  * similar to Slot in domain model
  */
 entity JobAssignment {
-	clientNickname String
-	startDate LocalDate
-	endDate LocalDate
-	notes String
-	numMissedDays Integer
-	workerRating Integer
-	employerSatisfied Boolean
+  clientNickname String
+  startDate LocalDate
+  endDate LocalDate
+  notes String
+  numMissedDays Integer
+  workerRating Integer
+  employerSatisfied Boolean
 }
 
 service JobAssignment with serviceClass
@@ -339,9 +339,9 @@ paginate JobAssignment with pagination
 filter JobAssignment
 
 entity JobShift {
-	shiftName String required
-	numWorkersReq Integer
-	numWorkersShort Integer
+  shiftName String required
+  numWorkersReq Integer
+  numWorkersShort Integer
 }
 
 service JobShift with serviceClass
@@ -350,133 +350,133 @@ filter JobShift
 
 // COMMS
 enum PhoneType {
-	VOICE, TEXT, SMART
+  VOICE, TEXT, SMART
 }
 entity Phone {
 	num String required
 	type PhoneType
 }
 entity ContactInfo {
-	date LocalDate // as-of date of contact info
-	emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailWork String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailHome String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	emailOther String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
-	phonePrimary String
-	phonePrimaryType PhoneType
-	phoneHome String
-	phoneHomeType PhoneType
-	phoneMobile String
-	phoneMobileType PhoneType
-	phoneFax String
+  date LocalDate // as-of date of contact info
+  emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  emailWork String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  emailHome String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  emailOther String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+  phonePrimary String
+  phonePrimaryType PhoneType
+  phoneHome String
+  phoneHomeType PhoneType
+  phoneMobile String
+  phoneMobileType PhoneType
+  phoneFax String
 }
 entity ContactLogEntry {
-	date ZonedDateTime
-	contactType ContactType
-	contactPurpose ContactPurpose
-	comment String
+  date ZonedDateTime
+  contactType ContactType
+  contactPurpose ContactPurpose
+  comment String
 }
 paginate ContactLogEntry with pagination
 service ContactLogEntry with serviceClass
 filter ContactLogEntry
 
 enum ContactType {
-	WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
+  WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
 }
 enum ContactPurpose {
-	W_APPLICATION, W_INTERVIEW, W_APPLICATION_DECISION, W_OFFER, W_ASSIGN, W_WITHDRAW, W_OTHER,
+  W_APPLICATION, W_INTERVIEW, W_APPLICATION_DECISION, W_OFFER, W_ASSIGN, W_WITHDRAW, W_OTHER,
 	J_CREATE, J_CANCEL, J_PROBLEM
 }
 enum CommsType {
-	PHONE, SMS, EMAIL, INAPPNOTIF, WORKER_PREF
+  PHONE, SMS, EMAIL, INAPPNOTIF, WORKER_PREF
 }
 enum CommsStatus {
-	PENDING, REJ, INPROCESS, SUCCEEDED, FAILED
+  PENDING, REJ, INPROCESS, SUCCEEDED, FAILED
 }
 enum CommsCallbackMethod {
-	GET, POST
+  GET, POST
 }
 entity CommsCmd {
-	workerId String
-	commType CommsType
-	templateName String
-	templateVersion String
-	templateVars TextBlob
-	from String
-	sched String
-	content TextBlob
-	status CommsStatus
+  workerId String
+  commType CommsType
+  templateName String
+  templateVersion String
+  templateVars TextBlob
+  from String
+  sched String
+  content TextBlob
+  status CommsStatus
 }
 
 entity CommsTemplate {
-	name String
-	version String
-	template TextBlob
-	templateVars TextBlob
+  name String
+  version String
+  template TextBlob
+  templateVars TextBlob
 }
 
 service CommsCmd with serviceClass
 filter CommsCmd
 
 entity CommsProvider {
-	name String
-	commsProviderPhone String
-	accountNumber String
+  name String
+  commsProviderPhone String
+  accountNumber String
 }
 entity CommsChannelConfig {	
-	commsProviderName String
-	platform String
-	platformCred String
-	platformURL String
-	callbackURL String
-	callbackMethod CommsCallbackMethod
-	statusCallbackUrl String
-	statusCallbackMethod CommsCallbackMethod
+  commsProviderName String
+  platform String
+  platformCred String
+  platformURL String
+  callbackURL String
+  callbackMethod CommsCallbackMethod
+  statusCallbackUrl String
+  statusCallbackMethod CommsCallbackMethod
 }
 
 relationship OneToMany {
-	CommsProvider{channel} to CommsChannelConfig{provider}
+  CommsProvider{channel} to CommsChannelConfig{provider}
 }
 
 // common stuff
 
 entity Address {
-	street String
-	streetLine2 String
-	city String
-	state StateAbbrev
-	zip Integer
+  street String
+  streetLine2 String
+  city String
+  state StateAbbrev
+  zip Integer
 }
 
 enum StateAbbrev {
-	CA,
-	OR,
-	WA
+  CA,
+  OR,
+  WA
 }
 
 enum StateNames {
-	CALIFORNIA,
-	OREGON,
-	WASHINGTON
+  CALIFORNIA,
+  OREGON,
+  WASHINGTON
 }
 
 enum TimeName {
-	NONE, MIDNIGHT, MORNING, NOON, AFTERNOON, EVENING, VARIABLE 	
+  NONE, MIDNIGHT, MORNING, NOON, AFTERNOON, EVENING, VARIABLE 	
 }
 
 entity TimeWindow {
-	name String
-	isWorkerTime Boolean // alternative is "Shift" time
-	startTime String
-	endTime String
-	// I guess we could do an Array but that's 24 bytes of overhead, and expensive. So, columns.
-	isOnSun Boolean
-	isOnMon Boolean
-	isOnTu  Boolean
-	isOnWed Boolean
-	isOnTh  Boolean
-	isOnFri Boolean
-	isOnSat Boolean
+  name String
+  isWorkerTime Boolean // alternative is "Shift" time
+  startTime String
+  endTime String
+  // I guess we could do an Array but that's 24 bytes of overhead, and expensive. So, columns.
+  isOnSun Boolean
+  isOnMon Boolean
+  isOnTu  Boolean
+  isOnWed Boolean
+  isOnTh  Boolean
+  isOnFri Boolean
+  isOnSat Boolean
 }
 service TimeWindow with serviceClass
 filter TimeWindow
