@@ -21,7 +21,7 @@
     serverPort 8080,
     prodDatabaseType postgresql,
     cacheProvider hazelcast,
-    authenticationType oauth2,
+    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
     useSass true
@@ -38,7 +38,7 @@ application {
     serverPort 8081
     prodDatabaseType postgresql,
     cacheProvider hazelcast,
-    authenticationType oauth2,
+    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
@@ -62,7 +62,8 @@ application {
     serverPort 8082
     prodDatabaseType postgresql,
     cacheProvider hazelcast
-    authenticationType oauth2,
+    authenticationType uaa,
+    uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
   entities ExternalCmd, CommsCmd, CommsTemplate
@@ -78,7 +79,8 @@ application {
     serverPort 8083,
     prodDatabaseType postgresql
     cacheProvider hazelcast
-    authenticationType oauth2
+    authenticationType uaa
+    uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
   entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
@@ -94,7 +96,8 @@ application {
     serverPort 8084
     prodDatabaseType postgresql
     cacheProvider hazelcast
-    authenticationType oauth2
+    authenticationType uaa
+    uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
   entities Candidate, JobSummary, JobSkillSummary, ContactInfo, ContactLogEntry, Phone, Address
