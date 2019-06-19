@@ -105,7 +105,7 @@ microservice Candidate, JobSummary, JobSkillSummary with onboarding
 
 deployment {
   deploymentType kubernetes
-  appsFolders [ui, domain, onboarding, comms, uaa]
+  appsFolders [ui, domain, onboarding, comms, integration, uaa]
   dockerRepositoryName "optindev"  // pw g3t0pt1n1
   serviceDiscoveryType eureka
   istio true
@@ -113,6 +113,15 @@ deployment {
   kubernetesNamespace nwic-pilot
 //  ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
   ingressDomain "localhost" // because I run a local istio cluster for dev
+}
+
+// good for local test
+deployment {
+  deploymentType docker-compose
+  appsFolders [ui, domain, onboarding, comms, integration, uaa]
+  dockerRepositoryName "optindev"
+  monitoring elk
+  consoleOptions [zipkin]
 }
 
 // entity definitions here
