@@ -261,7 +261,9 @@ relationship ManyToOne {
 
 relationship ManyToMany {
   Worker{jobSkill} to JobSkill{skilledWorker}
+  Worker{matchesJob} to Job{matchesWorker} // our most important relationship!
   Job{reqSkill} to JobSkill{reqFor}
+
 }
 
 // JOB related
