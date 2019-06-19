@@ -12,6 +12,7 @@
  		prodDatabaseType postgresql,
  	}
  }
+ // adding hazelcast to ui - shouldn't need but get javax.cache not found errs in build
  application {
   config {
     baseName ui,
@@ -19,7 +20,7 @@
     applicationType gateway,
     serverPort 8080,
     prodDatabaseType postgresql,
-    cacheProvider no,
+    cacheProvider hazelcast,
     authenticationType oauth2,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
@@ -41,10 +42,17 @@ application {
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
-  entities Employer, Worker, TimeWindow, ContactInfo, Job, JobShift, JobSkill, JobSite, JobAssignment, Phone, Address
+  entities	Employer, Worker, TimeWindow,
+			CommsCmd, CommsTemplate, ContactInfo, ContactLogEntry,
+			Job, JobAssignment, JobShift, JobSite, JobSkill,
+			JobSummary, JobSkillSummary,
+			Phone, Address
 }
 
-microservice Employer, Worker, TimeWindow, ContactInfo, Job, JobShift, JobSkill, JobSite, JobAssignment with domain
+microservice Employer, Worker, TimeWindow,
+			 Job, JobAssignment, JobShift, JobSite, JobSkill,
+			 Phone, Address
+  with domain
 
 application {
 	config {
@@ -57,7 +65,7 @@ application {
 		authenticationType oauth2,
 		serviceDiscoveryType eureka
 	}
-	entities ExternalCmd
+	entities ExternalCmd, CommsCmd, CommsTemplate
 }
 
 microservice ExternalCmd with integration
@@ -73,26 +81,27 @@ application {
 		authenticationType oauth2
 		serviceDiscoveryType eureka
 	}
-	entities CommsCmd, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
+	entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Phone, Address
 }
 
-microservice CommsCmd, ContactLogEntry with comms
+microservice CommsCmd, CommsProvider, CommsChannelConfig, CommsTemplate, ContactInfo, ContactLogEntry with comms
 
 application {
 	config {
-		baseName onboarding
-		packageName  com.optin.nwic
-		applicationType monolith
-		authenticationType oauth2
+		baseName onboarding,
+		packageName com.optin.nwic
+		applicationType microservice
+		serverPort 8084
 		prodDatabaseType postgresql
 		cacheProvider hazelcast
-		serverPort 8084
+		authenticationType oauth2
+		serviceDiscoveryType eureka
 	}
-    entities Worker, JobAssignment, Employer, TimeWindow, ContactInfo, JobSkill, Phone, Address
+	entities Candidate, JobSummary, JobSkillSummary, ContactInfo, ContactLogEntry, Phone, Address
 }
+microservice Candidate, JobSummary, JobSkillSummary with onboarding
 
-// deployment2
-// istio changes in JH 6, just set istio true
+// istio changes in JH 6, just set istio true (online docs are wrong)
 
 deployment {
 	deploymentType kubernetes
@@ -102,7 +111,8 @@ deployment {
 	istio true
 	kubernetesServiceType Ingress
 	kubernetesNamespace nwic-pilot
-	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
+//	ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
+    ingressDomain "localhost" // because I run a local istio cluster for dev
 }
 
 // entity definitions here
@@ -154,7 +164,45 @@ relationship ManyToOne {
 	Employer{superbusiness} to Employer
 }
 
-// Worker stuff
+/**
+* Entity Candidate
+*/
+entity Candidate {
+	nameFirst String 
+    nameLast String required
+    nameNick String
+    active Boolean
+    status WorkerStatus
+    recruiter Boolean
+    notes String
+    owner String
+    sourcedFrom SourcedFrom
+	workerType WorkerType
+    // some denormalized fields
+    emailPrimary String pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
+    phonePrimary String
+    phonePrimaryType PhoneType
+    availStart LocalDate
+    availEnd LocalDate
+}
+service Candidate with serviceClass
+paginate Candidate with pagination
+filter Candidate
+
+entity JobSummary {
+	jobName String required
+    clientName String
+    startDate LocalDate
+    endDate LocalDate
+	workerRating Integer
+	employerSatisfied Boolean
+}
+
+relationship OneToMany {
+	Candidate{jobs} to JobSummary
+	JobSummary{skills} to JobSkillSummary
+}
+
 /**
  * Entity Worker
  */
@@ -192,7 +240,6 @@ enum SourcedFrom {
 	DO_NOT_STAFF, WORKING, HIRED, WALKS_OFF_JOB, PHONE_DISC, MOVED_OUT_OF_STATE, NO_SHOW_ALL_WEEK, NO_ENGLISH, FOUND_JOB, APPLIED
 }
 
-
 relationship OneToOne {
 	ContactInfo{addrHome}      to Address
 	JobShift to TimeWindow
@@ -203,6 +250,7 @@ relationship OneToMany {
 	Worker{jobHistory} to JobAssignment
 	Worker{avail} to TimeWindow
 	Job{shifts} to JobShift{job}
+	JobShift{assigned} to JobAssignment{jobShift}
 	JobSite{jobs} to Job{site}
 	Employer{defSkills} to JobSkill{definedBy}
 }
@@ -221,6 +269,7 @@ entity Job {
     jobName String required
     clientName String
     startDate LocalDate
+	endDate LocalDate
     status JobStatus
     workersNeeded Integer
     workersShort Integer
@@ -234,6 +283,15 @@ service Job with serviceClass
 filter Job
 paginate Job with pagination
 
+
+// resuable Job-related entities
+entity JobSite {
+	jobName String
+	jobCity String
+	jobState StateAbbrev
+	clientName String
+}
+
 entity JobSkill {
 	category String
 	skillName String
@@ -243,16 +301,20 @@ entity JobSkill {
 	isLevelMax Boolean
 	monthsExp Integer
 }
-service JobSkill with serviceClass
-paginate JobSkill with pagination
-filter JobSkill
 
-entity JobSite {
-	jobName String
-	jobCity String
-	jobState StateAbbrev
-	clientName String
+entity JobSkillSummary {
+	category String
+	skillName String
+	isBool Boolean
+	level Integer
+	isLevelMin Boolean
+	isLevelMax Boolean
+	monthsExp Integer
 }
+
+service JobSkill with serviceClass
+filter JobSkill
+paginate JobSkill with pagination
 
 enum JobStatus {
 	OPEN, FILLED, CLOSED, CANCELED
@@ -326,7 +388,7 @@ enum ContactPurpose {
 	J_CREATE, J_CANCEL, J_PROBLEM
 }
 enum CommsType {
-	PHONE, SMS, EMAIL
+	PHONE, SMS, EMAIL, INAPPNOTIF, WORKER_PREF
 }
 enum CommsStatus {
 	PENDING, REJ, INPROCESS, SUCCEEDED, FAILED
@@ -337,10 +399,20 @@ enum CommsCallbackMethod {
 entity CommsCmd {
 	workerId String
 	commType CommsType
-	phoneFrom String
+	templateName String
+	templateVersion String
+	templateVars TextBlob
+	from String
 	sched String
 	content TextBlob
 	status CommsStatus
+}
+
+entity CommsTemplate {
+	name String
+	version String
+	template TextBlob
+	templateVars TextBlob
 }
 
 service CommsCmd with serviceClass
@@ -408,4 +480,3 @@ entity TimeWindow {
 }
 service TimeWindow with serviceClass
 filter TimeWindow
-
