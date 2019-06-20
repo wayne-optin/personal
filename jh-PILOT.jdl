@@ -38,7 +38,7 @@ application {
     serverPort 8081
     prodDatabaseType postgresql,
     cacheProvider hazelcast,
-//    authenticationType uaa,
+    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
@@ -61,7 +61,7 @@ application {
     serverPort 8082
     prodDatabaseType postgresql,
     cacheProvider hazelcast
-//    authenticationType uaa,
+    authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
   }
@@ -78,7 +78,7 @@ application {
     serverPort 8083,
     prodDatabaseType postgresql
     cacheProvider hazelcast
- //   authenticationType uaa
+    authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
@@ -95,7 +95,7 @@ application {
     serverPort 8084
     prodDatabaseType postgresql
     cacheProvider hazelcast
-//    authenticationType uaa
+    authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
   }
@@ -114,7 +114,7 @@ deployment {
   kubernetesServiceType Ingress
   kubernetesNamespace nwic-pilot
 //  ingressDomain "35.239.46.241.nip.io" // the gcloud extern ip for nwic-pilot cluster
-  ingressDomain "localhost" // because I run a local istio cluster for dev
+  ingressDomain "localhost" // because I want to run a local istio cluster for dev
 }
 
 // good for local test
