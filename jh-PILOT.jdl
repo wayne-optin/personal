@@ -25,6 +25,9 @@
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
     useSass true
+    testFrameworks [protractor]
+    websocket spring-websocket
+    messageBroker kafka
   }
   entities *
 }
@@ -41,17 +44,23 @@ application {
     authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
+    searchEngine elasticsearch
+    testFrameworks [gatling,cucumber]
+    skipUserManagement true
+    messageBroker kafka
   }
   entities Employer, Worker, TimeWindow,
            CommsCmd, CommsTemplate, ContactInfo, ContactLogEntry,
-           Job, JobAssignment, JobShift, JobSite, JobSkill,
+           Job, JobWorkerSkillMatch, JobAssignment, JobShift, JobSite, JobSkill,
            JobSummary, JobSkillSummary,
            Phone, Address
 }
 
 microservice Employer, Worker, TimeWindow,
-           Job, JobAssignment, JobShift, JobSite, JobSkill
+           Job, JobWorkerSkillMatch, JobAssignment, JobShift, JobSite, JobSkill
            with domain
+
+search Worker, Job, JobSkill, JobAssignment with elasticsearch
 
 application {
   config {
@@ -64,6 +73,9 @@ application {
     authenticationType uaa,
     uaaBaseName "uaa",
     serviceDiscoveryType eureka
+    testFrameworks [gatling]
+    skipUserManagement true
+    messageBroker kafka
   }
   entities ExternalCmd, CommsCmd, CommsTemplate
 }
@@ -81,6 +93,9 @@ application {
     authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
+    testFrameworks [gatling]
+    skipUserManagement true
+    messageBroker kafka
   }
   entities CommsCmd, CommsTemplate, CommsProvider, CommsChannelConfig, ContactInfo, ContactLogEntry, Address, Phone
 }
@@ -98,6 +113,9 @@ application {
     authenticationType uaa
     uaaBaseName "uaa"
     serviceDiscoveryType eureka
+    testFrameworks [gatling]
+    skipUserManagement true
+    messageBroker kafka
   }
   entities Candidate, JobSummary, JobSkillSummary, ContactInfo, ContactLogEntry, Phone, Address
 }
@@ -126,6 +144,18 @@ deployment {
   consoleOptions [zipkin]
 }
 
+// use a serviceClass for all the entities; slower but we'll want control/logging
+service * with serviceClass
+
+// use DTO to disconnect REST layer from the services
+dto * with mapstruct
+
+// paginate everything, for cconsistency
+paginate * with pagination
+
+// enable query filtering for all the entities
+filter *
+
 // entity definitions here
 
 /** Entity ExternCmd (experimental)
@@ -141,8 +171,6 @@ entity ExternalCmd {
 enum ExternalCmdStatus {
   RCD, REJ, INPROC, FAILED, COMPLETE
 }
-
-service ExternalCmd with serviceClass
 
 /**
  * Entity Employer aka Client
@@ -196,9 +224,6 @@ entity Candidate {
   availStart LocalDate
   availEnd LocalDate
 }
-service Candidate with serviceClass
-paginate Candidate with pagination
-filter Candidate
 
 entity JobSummary {
   jobName String required
@@ -236,10 +261,6 @@ entity Worker {
   availEnd LocalDate
 }
 
-service Worker with serviceClass
-paginate Worker with pagination
-filter Worker
-
 enum WorkerStatus {
   ALL, PENDING, APPROVED, DO_NOT_STAFF
 }
@@ -260,6 +281,8 @@ relationship OneToOne {
 relationship OneToMany {
   Worker{jobHistory} to JobAssignment
   Worker{avail} to TimeWindow
+  Worker{jobworkermatches} to JobWorkerSkillMatch
+  Job{jobworkermatches} to JobWorkerSkillMatch
   Job{shifts} to JobShift{job}
   JobShift{assigned} to JobAssignment{jobShift}
   JobSite{jobs} to Job{site}
@@ -271,10 +294,24 @@ relationship ManyToOne {
 }
 
 relationship ManyToMany {
-  Worker{jobSkill} to JobSkill{skilledWorker}
-  Worker{matchesJob} to Job{matchesWorker} // our most important relationship!
+  Worker{hasJobSkill} to JobSkill{skilledWorker}
+  Worker{wantsJobSkill} to JobSkill{trainableWorker}
   Job{reqSkill} to JobSkill{reqFor}
+}
 
+enum JobWorkerSkillMatchBasis {
+  SKILL_MATCH, EMPLOYER_MANUAL, SCHEDULER_MANUAL
+}
+enum JobWorkerSkillMatchMechanism {
+  SMSVC_ALL, SMSVC_CRIT
+}
+entity JobWorkerSkillMatch {
+  whyMatched JobWorkerSkillMatchBasis
+  howMatched JobWorkerSkillMatchMechanism
+  whenMatched ZonedDateTime
+  matchComments TextBlob
+  matchQuality Float
+  isActive Boolean
 }
 
 // JOB related
@@ -291,11 +328,6 @@ entity Job {
   jobCity String
   jobState StateAbbrev
 }
-
-service Job with serviceClass
-filter Job
-paginate Job with pagination
-
 
 // resuable Job-related entities
 entity JobSite {
@@ -325,10 +357,6 @@ entity JobSkillSummary {
   monthsExp Integer
 }
 
-service JobSkill with serviceClass
-filter JobSkill
-paginate JobSkill with pagination
-
 enum JobStatus {
   OPEN, FILLED, CLOSED, CANCELED
 }
@@ -347,19 +375,11 @@ entity JobAssignment {
   employerSatisfied Boolean
 }
 
-service JobAssignment with serviceClass
-paginate JobAssignment with pagination
-filter JobAssignment
-
 entity JobShift {
   shiftName String required
   numWorkersReq Integer
   numWorkersShort Integer
 }
-
-service JobShift with serviceClass
-paginate JobShift with pagination
-filter JobShift
 
 // COMMS
 enum PhoneType {
@@ -389,9 +409,6 @@ entity ContactLogEntry {
   contactPurpose ContactPurpose
   comment String
 }
-paginate ContactLogEntry with pagination
-service ContactLogEntry with serviceClass
-filter ContactLogEntry
 
 enum ContactType {
   WEBFORM, PHONE, TEXT, EMAIL, INPERSON, OTHER
@@ -427,9 +444,6 @@ entity CommsTemplate {
   template TextBlob
   templateVars TextBlob
 }
-
-service CommsCmd with serviceClass
-filter CommsCmd
 
 entity CommsProvider {
   name String
@@ -491,5 +505,17 @@ entity TimeWindow {
   isOnFri Boolean
   isOnSat Boolean
 }
-service TimeWindow with serviceClass
-filter TimeWindow
+
+
+// TODO - FUTURE
+//
+// track worker's individual skill qualities 'good driver'
+// entity WorkerSkillRating {}
+// relationship OneToMany { Worker to WorkerSkillRating }
+//
+// tracker Worker, Employer work-together preference
+// entity WorkerEmployerPrefs {}
+// relationship OneToMany { Worker to WorkerEmployerPrefs, Employer to WorkerEmployerPrefs}
+//
+// add a UserPrefStateService usvc to hold/restore a User's preferenes and application state
+//
